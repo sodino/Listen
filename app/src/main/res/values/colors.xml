@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_playing">#ff0000ff</color>
+    <color name="list_item_odd">#ffFFEFDB</color>
+    <color name="list_item_even">#ffFDF5E6</color>
+    <color name="color_press">#ffffff00</color>
+    <color name="transparent">#00000000</color>
+</resources>
