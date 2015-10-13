@@ -1,9 +1,7 @@
 package lab.ui;
 
-import android.graphics.Color;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.util.AndroidRuntimeException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,22 +9,39 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import lab.sodino.listen.R;
-import lab.ui.BasicActivity;
+import lab.sodino.provence.R;
 
 /**
  * Created by sodino on 15-6-20.
  */
-public class TitleBarActivity extends BasicActivity {
+public class TitlebarActivity extends BasicActivity {
     protected ViewGroup layoutTitlebar;
-    protected TextView txtTitleBarName;
-    protected TextView txtTitleBarRight;
-    protected ImageView imgTitleBarIcon;
+    protected TextView txtTitlebarName;
+    protected TextView txtTitlebarRight;
+    protected ImageView imgTitlebarRight;
+    protected ImageView imgTitlebarLeft;
     private Drawable adLoading;// 标题栏文字末尾的菊花动画
+
+    /**
+     * 父类的默认点击处理监听器。
+     *
+     * 不能使TitlebarActivity直接implements OnClickListener，否则TitlebarActivity也同样implements OnClickListener时，则会执行子类的。
+     * */
+    private View.OnClickListener clickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.titlebarLeftImg:
+                    if (!doOnBackPressed()) {
+                        finish();
+                    }
+                    break;
+            }
+        }
+    };
 
     public void setContentView(int layoutID) {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
@@ -35,37 +50,40 @@ public class TitleBarActivity extends BasicActivity {
     }
 
 
-
-    protected View createTitleBar() {
-        LayoutInflater inflater = getLayoutInflater();
-        RelativeLayout titleBar = (RelativeLayout) inflater.inflate(R.layout.title_bar, rootView, false);
-        txtTitleBarName = (TextView) titleBar.findViewById(R.id.txtName);
-        imgTitleBarIcon = (ImageView) titleBar.findViewById(R.id.imgIcon);
-        txtTitleBarRight = (TextView) titleBar.findViewById(R.id.titlebarRightText);
-        return titleBar;
-    }
-
     public void setTitlebarRightText(int stringId) {
         setTitlebarRightText(getString(stringId));
     }
 
     public void setTitlebarRightText(String txt) {
-        if (txtTitleBarRight.getVisibility() != View.VISIBLE) {
-            txtTitleBarRight.setVisibility(View.VISIBLE);
+        if (txtTitlebarRight.getVisibility() != View.VISIBLE) {
+            txtTitlebarRight.setVisibility(View.VISIBLE);
         }
-        txtTitleBarRight.setText(txt);
+        if (imgTitlebarRight.getVisibility() != View.INVISIBLE) {
+            imgTitlebarRight.setVisibility(View.INVISIBLE);
+        }
+        txtTitlebarRight.setText(txt);
     }
 
-    public void setTitleBarName(int stringId) {
-        setTitleBarName(getString(stringId));
+    public void setTitlebarRightImage(int resID) {
+        if (txtTitlebarRight.getVisibility() != View.INVISIBLE) {
+            txtTitlebarRight.setVisibility(View.INVISIBLE);
+        }
+        if (imgTitlebarRight.getVisibility() != View.VISIBLE) {
+            imgTitlebarRight.setVisibility(View.VISIBLE);
+        }
+        imgTitlebarRight.setImageResource(resID);
     }
 
-    public void setTitleBarName(String name) {
+    public void setTitlebarName(int stringId) {
+        setTitlebarName(getString(stringId));
+    }
+
+    public void setTitlebarName(CharSequence name) {
         if (name != null && name.length() > 0) {
-            if (txtTitleBarName == null) {
-                throw new AndroidRuntimeException(this.getClass().getName() + ".createTitleBar() should assign value to txtTitleBarName.");
+            if (txtTitlebarName == null) {
+                throw new AndroidRuntimeException(this.getClass().getName() + ".createTitleBar() should assign value to txtTitlebarName.");
             } else {
-                txtTitleBarName.setText(name);
+                txtTitlebarName.setText(name);
             }
         }
     }
@@ -81,12 +99,15 @@ public class TitleBarActivity extends BasicActivity {
         baseLayout.setLayoutParams(lpBase);
 
         layoutTitlebar = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.title_bar, baseLayout, false);
-        RelativeLayout.LayoutParams lpTitlebar = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams lpTitlebar = (RelativeLayout.LayoutParams) layoutTitlebar.getLayoutParams();
         lpTitlebar.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         baseLayout.addView(layoutTitlebar, lpTitlebar);
-        txtTitleBarName = (TextView) layoutTitlebar.findViewById(R.id.txtName);
-        imgTitleBarIcon = (ImageView) layoutTitlebar.findViewById(R.id.imgIcon);
-        txtTitleBarRight = (TextView) layoutTitlebar.findViewById(R.id.titlebarRightText);
+        txtTitlebarName = (TextView) layoutTitlebar.findViewById(R.id.txtName);
+        imgTitlebarLeft = (ImageView) layoutTitlebar.findViewById(R.id.titlebarLeftImg);
+        // 注意，子类如果也直接实现了OnClickListener，则会先处理子类的点击事件。
+        imgTitlebarLeft.setOnClickListener(clickListener);
+        txtTitlebarRight = (TextView) layoutTitlebar.findViewById(R.id.titlebarRightText);
+        imgTitlebarRight = (ImageView) layoutTitlebar.findViewById(R.id.titlebarRightImg);
 
         RelativeLayout.LayoutParams lpContent = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
         lpContent.addRule(RelativeLayout.BELOW, R.id.titlebarLayout);
@@ -98,28 +119,28 @@ public class TitleBarActivity extends BasicActivity {
 
 
     public void startTitlebarIconAnimation(boolean isOpen) {
-        Animation anim = imgTitleBarIcon.getAnimation();
+        Animation anim = imgTitlebarLeft.getAnimation();
         if (anim != null) {
             anim.cancel();
         }
 
-
+        int desDegree = -180;
         RotateAnimation rotate = null;
         if (isOpen) {
-            rotate = new RotateAnimation(0, -90, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+            rotate = new RotateAnimation(0, desDegree, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
             rotate.setFillAfter(true);
         } else {
-            rotate = new RotateAnimation(-90, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+            rotate = new RotateAnimation(desDegree, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
             rotate.setFillAfter(false);
         }
         rotate.setDuration(300);;
-        imgTitleBarIcon.startAnimation(rotate);
+        imgTitlebarLeft.startAnimation(rotate);
     }
 
     public boolean startTitleLoading() {
         if (adLoading == null) {
             adLoading = getResources().getDrawable(R.drawable.common_loading);
-            txtTitleBarName.setCompoundDrawablesWithIntrinsicBounds(null, null, adLoading, null);
+            txtTitlebarName.setCompoundDrawablesWithIntrinsicBounds(null, null, adLoading, null);
 
             ((Animatable) adLoading).start();
             return true;
@@ -132,9 +153,10 @@ public class TitleBarActivity extends BasicActivity {
             ((Animatable)adLoading).stop();
             adLoading = null;
 
-            txtTitleBarName.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+            txtTitlebarName.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             return true;
         }
         return false;
     }
+
 }

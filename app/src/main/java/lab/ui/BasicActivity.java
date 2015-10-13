@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.FragmentActivity;
 
-import lab.sodino.listen.thread.DispatchHandler;
+import lab.sodino.provence.thread.DispatchHandler;
 import lab.util.FLog;
 import android.util.AndroidRuntimeException;
 import android.view.View;
@@ -13,15 +13,24 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import java.lang.ref.WeakReference;
+import java.util.LinkedList;
+
 /**
  * Created by sodino on 15-6-20.
  */
 public class BasicActivity extends FragmentActivity {
+
+    private static LinkedList<WeakReference<BasicActivity>> listAllActivities = new LinkedList<WeakReference<BasicActivity>>();
+
     protected ViewGroup rootView;
     private DispatchHandler uiHandler;
+    private WeakReference<BasicActivity> weakRef;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        weakRef = new WeakReference<BasicActivity>(this);
+        listAllActivities.add(weakRef);
         if (FLog.isDebug()) {
             FLog.d("BasicActivity", "onCreate() " + this.getClass().getName() +"@" + this.hashCode());
         }
@@ -59,6 +68,10 @@ public class BasicActivity extends FragmentActivity {
 
     public void onDestroy() {
         super.onDestroy();
+        weakRef.clear();
+        listAllActivities.remove(weakRef);
+        weakRef = null;
+
         getUIHandler().removeCallbacksAndMessages(null);
         if (FLog.isDebug()) {
             FLog.d("BasicActivity", "onDestroy() " + this.getClass().getName() +"@" + this.hashCode());
@@ -81,4 +94,42 @@ public class BasicActivity extends FragmentActivity {
 
         return uiHandler;
     }
+
+    /**
+     * 请调用 {@link #doOnBackPressed()}
+     */
+    @Deprecated
+    @Override
+    public final void onBackPressed() {
+        doOnBackPressed();
+    }
+
+    protected boolean doOnBackPressed() {
+        super.onBackPressed();
+        return false;
+    }
+
+    public synchronized static void finishAllActivities() {
+        int size = listAllActivities.size();
+        if (FLog.isDebug()) {
+            FLog.d("BasicActivity", "finishAllActivities() size=" + size);
+        }
+        for (int i = size -1; i >= 0; i--) {
+//        for (int i = 0; i < size; i++) {
+            WeakReference<BasicActivity> weak = listAllActivities.get(i);
+            BasicActivity activity = weak.get();
+            if (activity == null) {
+                // do nothing
+            } else {
+                if (activity.isFinishing() == false) {
+                    activity.finish();
+                }
+                if (FLog.isDebug()) {
+                    FLog.d("BasicActivity", "finishAllActivities() i=" + i + " remove=" + activity.toString());
+                }
+            }
+            listAllActivities.remove(i);
+        }
+    }
+
 }

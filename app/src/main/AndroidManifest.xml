@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="lab.sodino.listen" >
+    package="lab.sodino.provence" >
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
     <application
         android:allowBackup="true"
+        android:name=".app.ProvenceApp"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
             android:name=".activity.MainActivity"
             android:theme="@android:style/Theme.NoTitleBar"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,11 +22,15 @@
         </activity>
         <activity
             android:name=".activity.LyricsActivity"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar"
+            android:screenOrientation="portrait"
+            android:exported="false">
         </activity>
         <activity
-            android:name=".activity.TestActivity"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:name=".activity.PlaySettingActivity"
+            android:theme="@android:style/Theme.NoTitleBar"
+            android:screenOrientation="portrait"
+            android:exported="false">
         </activity>
     </application>
 

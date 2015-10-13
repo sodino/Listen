@@ -6,7 +6,8 @@ import android.os.Message;
 
 import java.io.IOException;
 
-import lab.sodino.listen.thread.ThreadPool;
+import lab.sodino.constant.AppConstant;
+import lab.sodino.provence.thread.ThreadPool;
 import lab.util.FLog;
 
 /**
@@ -14,14 +15,14 @@ import lab.util.FLog;
  */
 public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, Handler.Callback {
     /**获取当前的播放进度*/
-    public static final int MSG_GET_POSITION = 1;
+    public static final int MSG_GET_PROGRESS = 1;
 
 
-    public static interface OnPositionListener {
+    public static interface OnAudioListener {
         /**
          * @state {@link #STATE_PLAY} {@link #STATE_PAUSE} {@link #STATE_STOP} {@link #STATE_RELEASE} {@link #STATE_COMPLETE}
          * */
-        public void onCurrentPositionListener(int state, long current, long duration);
+        public void onAudioProgress(int state, long current, long duration);
     }
 
 //    public static final int STATE_ERROR = -1;//没有error的状态是因为出现error后，直接就执行release()了，进入了RELEASE状态
@@ -40,7 +41,7 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
     private boolean needPlay = false;
     private boolean error = false;
 
-    private OnPositionListener mOnPositionListener;
+    private OnAudioListener mOnAudioListener;
 
     public MediaPlayerHelper(String mediaPath) {
         this.mediaPath = mediaPath;
@@ -63,11 +64,11 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
     @Override
     public boolean handleMessage(Message msg) {
         switch(msg.what) {
-            case MSG_GET_POSITION:
+            case MSG_GET_PROGRESS:
                 if (state == STATE_PLAY) {
-                    if (mOnPositionListener != null) {
-                        mOnPositionListener.onCurrentPositionListener(STATE_PLAY, player.getCurrentPosition(), player.getDuration());
-                        ThreadPool.getFileHandler().sendEmptyMessageDelayed(MSG_GET_POSITION, 50, this);// 50 ms刷新一次
+                    if (mOnAudioListener != null) {
+                        mOnAudioListener.onAudioProgress(STATE_PLAY, player.getCurrentPosition(), player.getDuration());
+                        ThreadPool.getFileHandler().sendEmptyMessageDelayed(MSG_GET_PROGRESS, AppConstant.Player.UPDATE_PROGRESS_TIME, this);// 50 ms刷新一次
                     }
                 }
                 break;
@@ -75,8 +76,8 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
         return true;
     }
 
-    public void setOnPositionListener(OnPositionListener mOnPositionListener) {
-        this.mOnPositionListener = mOnPositionListener;
+    public void setOnProgressListener(OnAudioListener mOnAudioListener) {
+        this.mOnAudioListener = mOnAudioListener;
     }
 
     public void reset() {
@@ -105,8 +106,8 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
             state = STATE_PAUSE;
 
             if (oldState == STATE_PLAY) {
-                if (mOnPositionListener != null) {
-                    mOnPositionListener.onCurrentPositionListener(STATE_PAUSE, player.getCurrentPosition(), player.getDuration());
+                if (mOnAudioListener != null) {
+                    mOnAudioListener.onAudioProgress(STATE_PAUSE, player.getCurrentPosition(), player.getDuration());
                 }
             }
         }
@@ -120,8 +121,8 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
             state = STATE_STOP;
 
             if (oldState == STATE_PLAY) {
-                if (mOnPositionListener != null) {
-                    mOnPositionListener.onCurrentPositionListener(STATE_STOP, player.getCurrentPosition(), player.getDuration());
+                if (mOnAudioListener != null) {
+                    mOnAudioListener.onAudioProgress(STATE_STOP, player.getCurrentPosition(), player.getDuration());
                 }
             }
         }
@@ -136,11 +137,11 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
             state = STATE_RELEASE;
 
             if (oldState == STATE_PLAY) {
-                if (mOnPositionListener != null) {
-                    mOnPositionListener.onCurrentPositionListener(STATE_STOP, -1, -1);
+                if (mOnAudioListener != null) {
+                    mOnAudioListener.onAudioProgress(STATE_STOP, -1, -1);
                 }
             }
-            mOnPositionListener = null;
+            mOnAudioListener = null;
             player.release();
             player = null;
 
@@ -187,8 +188,8 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
             case STATE_COMPLETE:
                 player.start();
                 state = STATE_PLAY;
-                if (mOnPositionListener != null) {
-                    ThreadPool.getFileHandler().sendEmptyMessage(MSG_GET_POSITION, this);
+                if (mOnAudioListener != null) {
+                    ThreadPool.getFileHandler().sendEmptyMessage(MSG_GET_PROGRESS, this);
                 }
                 if (FLog.isDebug()) {
                     FLog.d("MediaPlayer", "player.start()");
@@ -227,8 +228,8 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
             FLog.d("MediaPlayer", "onCompletetion()");
         }
         state = STATE_COMPLETE;
-        if (mOnPositionListener != null) {
-            mOnPositionListener.onCurrentPositionListener(STATE_COMPLETE, player.getCurrentPosition(), player.getDuration());
+        if (mOnAudioListener != null) {
+            mOnAudioListener.onAudioProgress(STATE_COMPLETE, player.getCurrentPosition(), player.getDuration());
         }
     }
 
