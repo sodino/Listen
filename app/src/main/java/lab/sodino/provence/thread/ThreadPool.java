@@ -3,20 +3,22 @@ package lab.sodino.provence.thread;
 import android.os.HandlerThread;
 import android.os.Looper;
 
+import lab.sodino.handler.Handler;
+
 /**
  * Created by sodino on 15-7-20.
  */
 public class ThreadPool {
     private static volatile HandlerThread FILE_THREAD;
-    private static volatile DispatchHandler FILE_HANDLER;
+    private static volatile Handler FILE_HANDLER;
 
-    private static volatile DispatchHandler UI_HANDLER;
+    private static volatile Handler UI_HANDLER;
 
-    public static DispatchHandler getUIHandler() {
+    public static Handler getUIHandler() {
         if (UI_HANDLER == null) {
             synchronized (ThreadPool.class) {
                 if (UI_HANDLER == null) {
-                    UI_HANDLER = new DispatchHandler(Looper.getMainLooper());
+                    UI_HANDLER = new Handler(Looper.getMainLooper());
                 }
             }
         }
@@ -37,11 +39,11 @@ public class ThreadPool {
         return FILE_THREAD;
     }
 
-    public static DispatchHandler getFileHandler() {
+    public static Handler getFileHandler() {
         if (FILE_HANDLER == null) {
             synchronized (ThreadPool.class) {
                 if (FILE_HANDLER == null) {
-                    FILE_HANDLER = new DispatchHandler(getFileThread().getLooper());
+                    FILE_HANDLER = new Handler(getFileThread().getLooper());
                 }
             }
         }

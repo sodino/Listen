@@ -13,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import lab.sodino.constant.AppConstant;
+import lab.sodino.handler.Callback;
 import lab.sodino.provence.R;
 import lab.sodino.provence.activity.LyricsActivity;
 import lab.sodino.provence.adapter.LyricsAdapter;
@@ -31,8 +32,7 @@ import lab.util.FileUtil;
  * Created by sodino on 15-8-26.
  */
 public class LyricsContentFragment extends BasicFragment<LyricsActivity>
-        implements RecyclerView.OnItemClickListener, RecyclerView.OnScrollListener,
-                    Handler.Callback, MediaPlayerHelper.OnAudioListener, View.OnClickListener, PlayModeListener {
+        implements RecyclerView.OnItemClickListener, RecyclerView.OnScrollListener,MediaPlayerHelper.OnAudioListener, View.OnClickListener, PlayModeListener {
     /**去读解析音频文件及播放*/
     public static final int MSG_PARSE_AUDIO = 1;
     /**只有mp3文件，没有其它的*/
@@ -66,6 +66,52 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
     private PlayMode playMode = new PlayMode();
     private Lyrics currentLyrics;
 
+    private Callback callback = new Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what) {
+                case MSG_PARSE_AUDIO:{
+                    parseAudio();
+                }
+                break;
+                case MSG_SHOW_LRC_OK:{
+                    mActivity.stopTitleLoading();
+                    mActivity.setTitlebarName(info.audioInfo.title);
+                    mAdapter.setLyricsList(info.audioInfo.listLyrics);
+                    mAdapter.notifyDataSetChanged();
+
+                    mediaHelper.play();
+                }
+                break;
+                case MSG_SCROLL_TO_PLAYING_ITEM:{
+                    mRecyclerView.scrollToPosition(msg.arg1);
+                }
+                break;
+                case MSG_PLAY_PAUSE_BUTTON:{
+                    int state = msg.arg1;
+                    updatePlayPauseButton(state);
+                }
+                break;
+                case MSG_SHOW_REST_SENTENCE_COUNT:{
+                    int count = msg.arg1;
+                    showRestSentenceCount(count);
+                }
+                break;
+                case MSG_HIDE_REST_SENTENCE_COUNT:{
+                    if (FLog.isDebug()) {
+                        FLog.d("LyricsContent", "handleMsg() MSG_HIDE_REST_SENTENCE_COUNT");
+                    }
+                    if (txtRestCount.getVisibility() != View.INVISIBLE) {
+                        txtRestCount.setVisibility(View.INVISIBLE);
+                    }
+                }
+                break;
+            }
+            return true;
+        }
+    };
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -98,7 +144,7 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
         mediaHelper.setOnProgressListener(this);
 
         mActivity.startTitleLoading();
-        ThreadPool.getFileHandler().sendEmptyMessage(MSG_PARSE_AUDIO, this);
+        ThreadPool.getFileHandler().sendEmptyMessage(MSG_PARSE_AUDIO, callback);
 
         return rootView;
     }
@@ -152,16 +198,16 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
                             if (FLog.isDebug()) {
                                 FLog.d("LyricsContent", "send MSG_SHOW_REST_SENTENCE_COUNT count=" + msg.arg1);
                             }
-                            ThreadPool.getUIHandler().sendMessage(msg, this);
+                            ThreadPool.getUIHandler().sendMessage(msg, callback);
                         }
                     }
                 } else {
                     // 从单句循环播放恢复为单曲循环
                     playMode.setMode(AppConstant.Player.MODE_LOOP_AUDIO, 0);
                     // 单句播放完后要取消数字的显示
-                    if (ThreadPool.getUIHandler().hasMessages(MSG_HIDE_REST_SENTENCE_COUNT) == false) {
+                    if (ThreadPool.getUIHandler().hasMessages(MSG_HIDE_REST_SENTENCE_COUNT, callback) == false) {
                         int delay = (int) loopingLyrics.duration;
-                        ThreadPool.getUIHandler().sendEmptyMessageDelayed(MSG_HIDE_REST_SENTENCE_COUNT, delay, this);
+                        ThreadPool.getUIHandler().sendEmptyMessageDelayed(MSG_HIDE_REST_SENTENCE_COUNT, delay, callback);
                     }
                 }
             } else if (state == MediaPlayerHelper.STATE_COMPLETE) {
@@ -174,7 +220,7 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
                 Message msg = Message.obtain();
                 msg.what = MSG_SCROLL_TO_PLAYING_ITEM;
                 msg.arg1 = pair.second; // playing position
-                ThreadPool.getUIHandler().sendMessage(msg, this);
+                ThreadPool.getUIHandler().sendMessage(msg, callback);
             }
         } else {
             // 出现了error
@@ -184,7 +230,7 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
         Message msg = Message.obtain();
         msg.what = MSG_PLAY_PAUSE_BUTTON;
         msg.arg1 = state;
-        ThreadPool.getUIHandler().sendMessage(msg, this);
+        ThreadPool.getUIHandler().sendMessage(msg, callback);
     }
 
     private void updatePlayPauseButton(int state) {
@@ -228,61 +274,18 @@ public class LyricsContentFragment extends BasicFragment<LyricsActivity>
         } else if (info.hasLRC) {
             boolean bool = info.parseLrc();
             if (bool) {
-                getUIHandler().sendEmptyMessage(MSG_SHOW_LRC_OK, this);
+                ThreadPool.getUIHandler().sendEmptyMessage(MSG_SHOW_LRC_OK, callback);
             } else {
-                getUIHandler().sendEmptyMessage(MSG_LRC_ERROR, this);
+                ThreadPool.getUIHandler().sendEmptyMessage(MSG_LRC_ERROR, callback);
             }
         } else if (info.hasMp3) {
             String path = info.getMp3Path();
             if (FileUtil.isExist(true, path)) {
-                getUIHandler().sendEmptyMessage(MSG_ONLY_MP3, this);
+                ThreadPool.getUIHandler().sendEmptyMessage(MSG_ONLY_MP3, callback);
             } else {
-                getUIHandler().sendEmptyMessage(MSG_NO_FILE_EXIST, this);
+                ThreadPool.getUIHandler().sendEmptyMessage(MSG_NO_FILE_EXIST, callback);
             }
         }
-    }
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch(msg.what) {
-            case MSG_PARSE_AUDIO:{
-                parseAudio();
-            }
-            break;
-            case MSG_SHOW_LRC_OK:{
-                mActivity.stopTitleLoading();
-                mActivity.setTitlebarName(info.audioInfo.title);
-                mAdapter.setLyricsList(info.audioInfo.listLyrics);
-                mAdapter.notifyDataSetChanged();
-
-                mediaHelper.play();
-            }
-            break;
-            case MSG_SCROLL_TO_PLAYING_ITEM:{
-                mRecyclerView.scrollToPosition(msg.arg1);
-            }
-            break;
-            case MSG_PLAY_PAUSE_BUTTON:{
-                int state = msg.arg1;
-                updatePlayPauseButton(state);
-            }
-            break;
-            case MSG_SHOW_REST_SENTENCE_COUNT:{
-                int count = msg.arg1;
-                showRestSentenceCount(count);
-            }
-            break;
-            case MSG_HIDE_REST_SENTENCE_COUNT:{
-                if (FLog.isDebug()) {
-                    FLog.d("LyricsContent", "handleMsg() MSG_HIDE_REST_SENTENCE_COUNT");
-                }
-                if (txtRestCount.getVisibility() != View.INVISIBLE) {
-                    txtRestCount.setVisibility(View.INVISIBLE);
-                }
-            }
-            break;
-        }
-        return true;
     }
 
     private void showRestSentenceCount(int index) {

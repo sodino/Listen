@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import java.util.LinkedList;
 
+import lab.sodino.handler.Callback;
 import lab.sodino.provence.R;
 import lab.sodino.provence.union.Lyrics;
 import lab.sodino.provence.thread.ThreadPool;
@@ -19,7 +20,7 @@ import lab.sodino.provence.union.Pair;
 /**
  * Created by sodino on 15-7-24.
  */
-public class LyricsAdapter extends RecyclerView.Adapter<LyricsAdapter.ViewHolder> implements Handler.Callback {
+public class LyricsAdapter extends RecyclerView.Adapter<LyricsAdapter.ViewHolder> {
 
     public static final int MSG_CHANGE_PLAYING_ITEM = 1;
     private LinkedList<Lyrics> listLyrics = new LinkedList<Lyrics>();
@@ -28,6 +29,20 @@ public class LyricsAdapter extends RecyclerView.Adapter<LyricsAdapter.ViewHolder
     /**检查播放状态的Item的间隔时间。避免频繁检查刷新。*/
     private int checkPlayingInterval = -1;
 
+    private Callback callback = new Callback () {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what){
+                case MSG_CHANGE_PLAYING_ITEM:{
+                    int oldPosition = msg.arg2;
+                    notifyItemChanged(oldPosition);
+                    notifyItemChanged(playingPosition);
+                }
+                break;
+            }
+            return true;
+        }
+    };
     public void setLyricsList(LinkedList<Lyrics> list) {
         if (list != null) {
             listLyrics.clear();
@@ -86,7 +101,7 @@ public class LyricsAdapter extends RecyclerView.Adapter<LyricsAdapter.ViewHolder
                     msg.what = MSG_CHANGE_PLAYING_ITEM;
                     msg.arg1 = playingPosition;
                     msg.arg2 = oldPosition;
-                    ThreadPool.getUIHandler().sendMessage(msg, this);
+                    ThreadPool.getUIHandler().sendMessage(msg, callback);
                 }
                 break;
             }
@@ -98,18 +113,6 @@ public class LyricsAdapter extends RecyclerView.Adapter<LyricsAdapter.ViewHolder
         return current;
     }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch(msg.what){
-            case MSG_CHANGE_PLAYING_ITEM:{
-                int oldPosition = msg.arg2;
-                notifyItemChanged(oldPosition);
-                notifyItemChanged(playingPosition);
-            }
-                break;
-        }
-        return true;
-    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
         private TextView txtLyrics;

@@ -19,6 +19,7 @@ import java.io.FilenameFilter;
 import java.util.LinkedList;
 
 import lab.sodino.constant.AppConstant;
+import lab.sodino.handler.Callback;
 import lab.sodino.provence.activity.LyricsActivity;
 import lab.sodino.provence.adapter.AudioFileAdapter;
 import lab.sodino.provence.activity.MainActivity;
@@ -30,13 +31,32 @@ import lab.util.FLog;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class AudioFileFragment extends BasicFragment<MainActivity> implements Handler.Callback, FilenameFilter, RecyclerView.OnItemClickListener {
+public class AudioFileFragment extends BasicFragment<MainActivity> implements FilenameFilter, RecyclerView.OnItemClickListener {
     public static final int MSG_SCAN_LISTEN_FOLDER = 1;
     private static final int MSG_SCAN_FOLDER_OK = 2;
 
     private RecyclerView mRecyclerView;
     private AudioFileAdapter mAdapter;
     private TextView txtHint;
+    private Callback callback = new Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what) {
+                case MSG_SCAN_LISTEN_FOLDER:
+                    scanListenFolder();
+                    break;
+                case MSG_SCAN_FOLDER_OK:{
+                    LinkedList<AudioFileInfo> list = (LinkedList<AudioFileInfo>) msg.obj;
+                    mAdapter.setAudioInfo(list);
+                    mAdapter.notifyDataSetChanged(); // 全部更换了..
+                    removeHintView();
+                    mActivity.stopTitleLoading();
+                }
+                break;
+            }
+            return true;
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -56,7 +76,7 @@ public class AudioFileFragment extends BasicFragment<MainActivity> implements Ha
         mRecyclerView.setAdapter(mAdapter);
 
         mActivity.startTitleLoading();
-        ThreadPool.getFileHandler().sendEmptyMessage(MSG_SCAN_LISTEN_FOLDER, this);
+        ThreadPool.getFileHandler().sendEmptyMessage(MSG_SCAN_LISTEN_FOLDER, callback);
         return rootView;
     }
 
@@ -95,24 +115,6 @@ public class AudioFileFragment extends BasicFragment<MainActivity> implements Ha
         parentLayout.removeView(txtHint);
     }
 
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch(msg.what) {
-            case MSG_SCAN_LISTEN_FOLDER:
-                scanListenFolder();
-                break;
-            case MSG_SCAN_FOLDER_OK:{
-                LinkedList<AudioFileInfo> list = (LinkedList<AudioFileInfo>) msg.obj;
-                mAdapter.setAudioInfo(list);
-                mAdapter.notifyDataSetChanged(); // 全部更换了..
-                removeHintView();
-                mActivity.stopTitleLoading();
-            }
-                break;
-        }
-        return true;
-    }
-
     private void scanListenFolder() {
         File folder = new File(AppConstant.PATH.FOLDER_LISTEN);
         if (folder.isDirectory() == false) {
@@ -133,7 +135,7 @@ public class AudioFileFragment extends BasicFragment<MainActivity> implements Ha
         Message msg = Message.obtain();
         msg.what = MSG_SCAN_FOLDER_OK;
         msg.obj = list;
-        getUIHandler().sendMessage(msg, this);
+        ThreadPool.getUIHandler().sendMessage(msg, callback);
     }
 
     public boolean accept(File dir, String filename) {

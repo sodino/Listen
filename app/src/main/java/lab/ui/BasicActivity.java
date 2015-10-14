@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.FragmentActivity;
 
-import lab.sodino.provence.thread.DispatchHandler;
+import lab.sodino.provence.thread.ThreadPool;
 import lab.util.FLog;
 import android.util.AndroidRuntimeException;
 import android.view.View;
@@ -24,7 +24,6 @@ public class BasicActivity extends FragmentActivity {
     private static LinkedList<WeakReference<BasicActivity>> listAllActivities = new LinkedList<WeakReference<BasicActivity>>();
 
     protected ViewGroup rootView;
-    private DispatchHandler uiHandler;
     private WeakReference<BasicActivity> weakRef;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -72,7 +71,6 @@ public class BasicActivity extends FragmentActivity {
         listAllActivities.remove(weakRef);
         weakRef = null;
 
-        getUIHandler().removeCallbacksAndMessages(null);
         if (FLog.isDebug()) {
             FLog.d("BasicActivity", "onDestroy() " + this.getClass().getName() +"@" + this.hashCode());
         }
@@ -81,18 +79,6 @@ public class BasicActivity extends FragmentActivity {
     @Deprecated
     public void setContentView(View contentView, ViewGroup.LayoutParams params) {
         throw new AndroidRuntimeException("Use setContentView(View v) or setContentView(int resdId) instead.");
-    }
-
-    public DispatchHandler getUIHandler() {
-        if (uiHandler == null) {
-            synchronized (BasicActivity.class) {
-                if (uiHandler == null) {
-                    uiHandler = new DispatchHandler(Looper.getMainLooper());
-                }
-            }
-        }
-
-        return uiHandler;
     }
 
     /**

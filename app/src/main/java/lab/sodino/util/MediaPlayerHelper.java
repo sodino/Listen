@@ -7,18 +7,37 @@ import android.os.Message;
 import java.io.IOException;
 
 import lab.sodino.constant.AppConstant;
+import lab.sodino.handler.Callback;
 import lab.sodino.provence.thread.ThreadPool;
 import lab.util.FLog;
 
 /**
  * Created by sodino on 15-7-26.
  */
-public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, Handler.Callback {
+public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
     /**获取当前的播放进度*/
     public static final int MSG_GET_PROGRESS = 1;
 
+    private Callback callback = new Callback() {
 
-    public static interface OnAudioListener {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch(msg.what) {
+                case MSG_GET_PROGRESS:
+                    if (state == STATE_PLAY) {
+                        if (mOnAudioListener != null) {
+                            mOnAudioListener.onAudioProgress(STATE_PLAY, player.getCurrentPosition(), player.getDuration());
+                            ThreadPool.getFileHandler().sendEmptyMessageDelayed(MSG_GET_PROGRESS, AppConstant.Player.UPDATE_PROGRESS_TIME, this);// 50 ms刷新一次
+                        }
+                    }
+                    break;
+            }
+            return true;
+        }
+    };
+
+
+    public interface OnAudioListener {
         /**
          * @state {@link #STATE_PLAY} {@link #STATE_PAUSE} {@link #STATE_STOP} {@link #STATE_RELEASE} {@link #STATE_COMPLETE}
          * */
@@ -60,21 +79,6 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
         player.prepareAsync();
     }
 
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch(msg.what) {
-            case MSG_GET_PROGRESS:
-                if (state == STATE_PLAY) {
-                    if (mOnAudioListener != null) {
-                        mOnAudioListener.onAudioProgress(STATE_PLAY, player.getCurrentPosition(), player.getDuration());
-                        ThreadPool.getFileHandler().sendEmptyMessageDelayed(MSG_GET_PROGRESS, AppConstant.Player.UPDATE_PROGRESS_TIME, this);// 50 ms刷新一次
-                    }
-                }
-                break;
-        }
-        return true;
-    }
 
     public void setOnProgressListener(OnAudioListener mOnAudioListener) {
         this.mOnAudioListener = mOnAudioListener;
@@ -189,7 +193,7 @@ public class MediaPlayerHelper implements MediaPlayer.OnPreparedListener, MediaP
                 player.start();
                 state = STATE_PLAY;
                 if (mOnAudioListener != null) {
-                    ThreadPool.getFileHandler().sendEmptyMessage(MSG_GET_PROGRESS, this);
+                    ThreadPool.getFileHandler().sendEmptyMessage(MSG_GET_PROGRESS, callback);
                 }
                 if (FLog.isDebug()) {
                     FLog.d("MediaPlayer", "player.start()");

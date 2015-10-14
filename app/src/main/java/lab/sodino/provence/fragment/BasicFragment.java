@@ -8,14 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.app.Fragment;
 
-import lab.sodino.provence.thread.DispatchHandler;
+import lab.sodino.provence.thread.ThreadPool;
 import lab.util.FLog;
 
 /**
  * Created by sodino on 15-7-12.
  */
 public class BasicFragment<T> extends Fragment {
-    private DispatchHandler uiHandler;
     protected T mActivity;
 
     public void onAttach(Activity activity) {
@@ -91,21 +90,9 @@ public class BasicFragment<T> extends Fragment {
 
     public void onDetach() {
         super.onDetach();
-        getUIHandler().removeCallbacksAndMessages(null);
         if (FLog.isDebug()) {
             FLog.d("BasicFragment", "onDetach() frag=" + this.getClass().getName());
         }
     }
 
-    public DispatchHandler getUIHandler() {
-        if (uiHandler == null) {
-            synchronized (BasicFragment.class) {
-                if (uiHandler == null) {
-                    uiHandler = new DispatchHandler(Looper.getMainLooper());
-                }
-            }
-        }
-
-        return uiHandler;
-    }
 }
