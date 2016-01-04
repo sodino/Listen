@@ -77,7 +77,5 @@ public class FileContentReader {
                 ie.printStackTrace();
             }
         }
-
-
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">普罗旺斯</string>
+    <string name="app_name">SoER</string>
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
@@ -12,5 +12,19 @@
     <string name="play_setting">播放设置</string>
 
     <string name="crash_toast">程序发生异常，正在退出...</string>
+    <string name="close">关闭</string>
+    <string name="forwardChar"><![CDATA[<]]></string>
+    <string name="forward2Char"><![CDATA[<<]]></string>
+    <string name="backwardChar"><![CDATA[>]]></string>
+    <string name="backward2Char"><![CDATA[>>]]></string>
+    <string name="file_no_found">找不到相应的文件</string>
+    <string name="ask_to_save">是否保存更改？</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="saving_modify">正在保存更改...</string>
+    <string name="save_completed">保存成功</string>
+    <string name="forwardSentence">上一句</string>
+    <string name="nextSentence">下一句</string>
+    <string name="mergeSentence">合并相邻句子</string>
 
 </resources>

@@ -8,15 +8,17 @@ import java.io.File;
  * Created by sodino on 15-7-20.
  */
 public class AppConstant {
+    public static final String NAME = "name";
     public static final String KEY = "key";
     public static final String VALUE = "value";
+    public static final String FILE_PATH = "path";
+    public static final String TYPE = "type";
 
-    public static final String KEY_INFO = "k_info";
-
+    public static final String NEW_LINE = "\n";
 
     public static class PATH {
-        public static final String FOLDER_LISTEN = Environment.getExternalStorageDirectory().getPath()  + File.separatorChar + "listen/";
-        public static final String FOLDER_LOG = FOLDER_LISTEN + "log/";
+        public static final String FOLDER_SOER = Environment.getExternalStorageDirectory().getPath()  + File.separatorChar + "soer/";
+        public static final String FOLDER_LOG = FOLDER_SOER + "log/";
     }
 
     public static class Audio {
@@ -37,4 +39,21 @@ public class AppConstant {
         public static final int UPDATE_PROGRESS_TIME = 50;
     }
 
+
+    public static class TimeAdjust {
+        public static final String TIME_ADJUST = "timeAdjust";
+    }
+
+    public static class Lrc {
+        public static final String PARENTHESES_LEFT = "[";
+        public static final String PARENTHESES_RIGHT = "]";
+
+        public static final String TITLE = "ti";
+        public static final String ARTIST = "ar";
+        public static final String ALBUM = "al";
+        public static final String BY = "by";
+
+        public static final String SEMICOLON = ":";
+
+    }
 }

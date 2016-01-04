@@ -6,17 +6,10 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import lab.sodino.constant.AppConstant;
 
@@ -129,7 +122,21 @@ public class FLog {
             String threadName = Thread.currentThread().getName();
             Log.d(tag, threadName + "|" + log);
 
-            long now = System.currentTimeMillis();
+//            long now = System.currentTimeMillis();
+            String strTime = TimeUtil.yyyyMMddHHmmssSSS();
+            Message msg = Message.obtain();
+            msg.what = MSG_WRITE_LOG;
+            msg.obj = strTime + "|" + threadName + "|" + tag + "|" + log;
+            sHandler.sendMessage(msg);
+        }
+    }
+
+    public static void e(String tag, String log) {
+        if (tag != null && tag.length() > 0 && log != null && log.length() > 0) {
+            String threadName = Thread.currentThread().getName();
+            Log.e(tag, threadName + "|" + log);
+
+//            long now = System.currentTimeMillis();
             String strTime = TimeUtil.yyyyMMddHHmmssSSS();
             Message msg = Message.obtain();
             msg.what = MSG_WRITE_LOG;

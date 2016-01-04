@@ -34,22 +34,4 @@ public class StringUtil {
         return bool;
     }
 
-//    public static int figureCallbackUniqueCode(Handler.Callback callback) {
-//        if (callback == null) {
-//            return 0;
-//        }
-//
-//        String fullName = callback.getClass().getName();
-//        int size = fullName.length();
-//        if (size > 100) { // 限定不超过100长度 为的是code往高位移16后，所有的code值仍都保留着不会因溢出而出现再次相同的风险
-//            throw new AndroidRuntimeException("The callback's name length is too looong!!:" + fullName);
-//        }
-//        int code = 0;
-//        for(int i = 0;i < size;i ++) {
-//            char ch = fullName.charAt(i);
-//            code += ch;
-//        }
-//
-//        return code << 16;
-//    }
 }

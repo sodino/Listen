@@ -2,6 +2,8 @@ package lab.util;
 
 import java.util.Calendar;
 
+import lab.sodino.constant.AppConstant;
+
 /**
  * Created by sodino on 15-10-6.
  */
@@ -153,5 +155,93 @@ public class TimeUtil {
                 + TimeUtil.getMonth(true) + STRIKE
                 + TimeUtil.getDay(true);
         return str;
+    }
+
+
+    /**
+     * 将一个时间长度计算为 h个小时m分钟m秒ms毫秒
+     * arr[0] ms
+     * arr[1] second
+     * arr[2] minute
+     * arr[3] hour
+     * @param time 单位毫秒
+     * */
+    public static long[] splitTime(long time) {
+        long[] arr = new long[4];
+        long remaind = time;
+        long hour = remaind / (1000 * 60 * 60); // 小时数
+        remaind = remaind - (hour * 60 * 60 * 1000); // 扣除小时后的剩余时间
+        long minute = remaind / (1000 * 60); // 分钟数
+        remaind = remaind - (minute * 60 * 1000); // 扣除分钟数后的剩余时间
+        long second = remaind / 1000; // 秒数
+        long ms = remaind = remaind - (second * 1000); // 毫秒数
+
+        arr[0] = ms;
+        arr[1] = second;
+        arr[2] = minute;
+        arr[3] = hour;
+
+        return arr;
+    }
+
+    public static String getLyricsTime(long lyricsTime) {
+        long[] arr = splitTime(lyricsTime);
+
+        String strHour = null;
+        // hour
+        long hour = arr[3];
+        if (hour == 0) {
+            // do nothing
+//            strHour = "00";
+        } else if (hour < 10) {
+            strHour = "0" + Long.toString(hour);
+        } else {
+            strHour = Long.toString(hour);
+        }
+
+
+
+        String strMinute = null;
+        // minute
+        long minute = arr[2];
+        if (minute == 0) {
+            strMinute = "00";
+        } else if (minute < 10) {
+            strMinute = "0" + Long.toString(minute);
+        } else {
+            strMinute = Long.toString(minute);
+        }
+
+        String strSecond = null;
+        // second
+        long second = arr[1];
+        if (second == 0) {
+            strSecond = "00";
+        } else if (second < 10) {
+            strSecond = "0" + Long.toString(second);
+        } else {
+            strSecond = Long.toString(second);
+        }
+
+        String strMS = null;
+        // millsecond
+        long ms = arr[0];
+        if (ms == 0) {
+            strMS = "000";
+        } else if (ms < 10) {
+            strMS = "00" + Long.toString(ms);
+        } else if (ms < 100) {
+            strMS = "0" + Long.toString(ms);
+        } else {
+            strMS = Long.toString(ms);
+        }
+
+
+        String content = strMinute + ":" + strSecond + "." + strMS;
+        if (strHour != null && strHour.length() > 0) {
+            content = strHour + ":" + content;
+        }
+
+        return content;
     }
 }

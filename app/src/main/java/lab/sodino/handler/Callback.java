@@ -1,6 +1,7 @@
 package lab.sodino.handler;
 
 import android.os.Handler;
+import android.os.Message;
 import android.util.AndroidRuntimeException;
 import android.util.SparseArray;
 
@@ -20,4 +21,9 @@ public abstract class Callback implements Handler.Callback{
         arrMsgObjs.delete(what);
         return obj;
     }
+
+    public boolean handleMessage(Message msg){
+        return false;
+    }
+
 }

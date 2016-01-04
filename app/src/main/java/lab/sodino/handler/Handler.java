@@ -81,4 +81,8 @@ public class Handler {
         msg.obj = callback;
         return handler.sendMessageAtFrontOfQueue(msg);
     }
+
+    public void removeMessages(int what, Object obj) {
+        handler.removeMessages(what, obj);
+    }
 }

@@ -84,7 +84,7 @@ import java.util.List;
  *     being displayed.</li>
  * </ul>
  */
-public class RecyclerView extends ViewGroup implements View.OnClickListener {
+public class RecyclerView extends ViewGroup implements View.OnClickListener, View.OnLongClickListener {
     private static final String TAG = "RecyclerView";
 
     private static final boolean DEBUG = false;
@@ -125,7 +125,7 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
 
     private final RecyclerViewDataObserver mObserver = new RecyclerViewDataObserver();
 
-    final Recycler mRecycler = new Recycler(this);
+    final Recycler mRecycler = new Recycler(this, this);
 
     private SavedState mPendingSavedState;
 
@@ -270,6 +270,7 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
         }
     };
     private OnItemClickListener mOnItemClickListener;
+    private OnItemLongClickListener mOnItemLongClickListener;
 
     public RecyclerView(Context context) {
         this(context, null);
@@ -2769,6 +2770,25 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
         return mOnItemClickListener;
     }
 
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        mOnItemLongClickListener = listener;
+    }
+
+    public OnItemLongClickListener getOnItemLongClickListener() {
+        return mOnItemLongClickListener;
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        ViewHolder vh = getChildViewHolder(v);
+        if (mOnItemLongClickListener != null && vh != null) {
+            mOnItemLongClickListener.onItemLongClick(vh.getPosition(), vh, v);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private class ViewFlinger implements Runnable {
         private int mLastFlingX;
         private int mLastFlingY;
@@ -3195,9 +3215,11 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
         private static final int DEFAULT_CACHE_SIZE = 2;
 
         private View.OnClickListener mOnClickListener;
+        private OnLongClickListener mOnLongClickListener;
 
-        public Recycler(View.OnClickListener listener) {
-            mOnClickListener = listener;
+        public Recycler(View.OnClickListener clickListener, OnLongClickListener longListener) {
+            mOnClickListener = clickListener;
+            mOnLongClickListener = longListener;
         }
 
         /**
@@ -3456,6 +3478,7 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
                             mAdapter.getItemViewType(offsetPosition));
                     if (holder != null && holder.itemView != null) {
                         holder.itemView.setOnClickListener(mOnClickListener);
+                        holder.itemView.setOnLongClickListener(mOnLongClickListener);
                     }
                     if (DEBUG) {
                         Log.d(TAG, "getViewForPosition created new ViewHolder");
@@ -8454,7 +8477,12 @@ public class RecyclerView extends ViewGroup implements View.OnClickListener {
 
 
     /**The callback of RecyclerView's item*/
-    public static interface OnItemClickListener{
+    public interface OnItemClickListener{
         public void onItemClick(int curPostion, ViewHolder holder, View view);
+    }
+
+    /**The callback of RecyclerView's item*/
+    public interface OnItemLongClickListener{
+        public void onItemLongClick(int curPostion, ViewHolder holder, View view);
     }
 }

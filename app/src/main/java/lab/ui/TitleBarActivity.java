@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import lab.sodino.provence.R;
+import lab.sodino.soer.R;
 
 /**
  * Created by sodino on 15-6-20.
